@@ -18,8 +18,9 @@ with Console(config['ip'], config['port']) as console:
     cmd = ''
     while True:
         cmd = input('>')
-        console.flush_log()
-        console.send_command(cmd)
+        if cmd != 'logs':
+            console.flush_log()
+            console.send_command(cmd)
         if cmd == 'exit':
             break
         time.sleep(.5)
