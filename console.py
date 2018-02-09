@@ -9,6 +9,14 @@ _server_line_split = '\r\n'
 _server_strip_chars = ['\x00']
 
 
+class NotLoggedIn(Exception):
+    pass
+
+
+class AlreadyLoggedIn(Exception):
+    pass
+
+
 class Console:
     _sock = None
     _r_thread = None
@@ -70,8 +78,7 @@ class Console:
 
     def send_command(self, cmd):
         if not self._logged_in:
-            # TODO update to use logging module
-            print('you need to log in first')
+            raise NotLoggedIn('you need to log in first')
         self._w_queue.put(cmd)
 
     def flush_log(self):
@@ -86,8 +93,7 @@ class Console:
             self._logged_in = True
             self.flush_log()
         else:
-            # TODO update to use logging module
-            print("you're already logged in")
+            raise AlreadyLoggedIn("you're already logged in")
 
     def cleanup(self):
         self._logged_in = False
