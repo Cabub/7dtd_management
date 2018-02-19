@@ -1,6 +1,5 @@
 from threading import Thread
 from queue import Queue, Empty
-import time
 import socket
 
 
@@ -9,11 +8,15 @@ _server_line_split = '\r\n'
 _server_strip_chars = ['\x00']
 
 
-class NotLoggedIn(Exception):
+class NotLoggedIn(RuntimeError):
     pass
 
 
-class AlreadyLoggedIn(Exception):
+class AlreadyLoggedIn(RuntimeError):
+    pass
+
+
+class Destroyed(RuntimeError):
     pass
 
 
@@ -79,15 +82,29 @@ class Console:
     def send_command(self, cmd):
         if not self._logged_in:
             raise NotLoggedIn('you need to log in first')
+        if self._stop_signal:
+            raise Destroyed('this console has already been destroyed')
         self._w_queue.put(cmd)
 
+    def feed(self):
+        while not self._stop_signal:
+            yield self._r_queue.get()
+
+    def get_line(self, timeout=.5):
+        if not self._stop_signal:
+            return self._r_queue.get(timeout)
+
     def flush_log(self):
+        if self._stop_signal:
+            raise Destroyed('this console has already been destroyed')
         log = list()
         while self._r_queue.qsize():
             log.append(self._r_queue.get())
         return log
 
     def log_in(self, password):
+        if self._stop_signal:
+            raise Destroyed('this console has already been destroyed')
         if not self._logged_in:
             self._w_queue.put(password)
             self._logged_in = True
@@ -96,6 +113,8 @@ class Console:
             raise AlreadyLoggedIn("you're already logged in")
 
     def cleanup(self):
+        if self._stop_signal:
+            raise Destroyed('this console has already been destroyed')
         self._logged_in = False
         self._stop_signal = True
         self._w_thread.join()
