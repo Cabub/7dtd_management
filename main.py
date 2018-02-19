@@ -28,7 +28,7 @@ def track_players():
     except FileNotFoundError as e:
         player_states = dict()
     while True:
-        if config['debug']: print('connecting to', config['ip'], config['port'])54r5
+        if config['debug']: print('connecting to', config['ip'], config['port'])
         with Console(config['ip'], config['port']) as console:
             try:
                 console.log_in(config['secret'])
@@ -59,8 +59,8 @@ def track_players():
                     database.save(player_states)
                 time.sleep(config['poll_interval'])
             except KeyboardInterrupt as e:
-                database.save(player_states)
                 if config['debug']: print('exiting')
+                database.save(player_states)
                 break
 
 
