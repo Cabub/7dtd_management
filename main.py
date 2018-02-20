@@ -57,6 +57,7 @@ def track_players():
                 if config['debug']: print('saving')
                 if state_changed:
                     database.save(player_states)
+                if config['debug']: print('sleeping {} seconds'.format(config['poll_interval']))
                 time.sleep(config['poll_interval'])
             except KeyboardInterrupt as e:
                 if config['debug']: print('exiting')

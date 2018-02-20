@@ -34,6 +34,7 @@ class Console:
         self.port = port
         self._sock = socket.socket()
         self._sock.connect((host, port))
+        self._sock.settimeout(1)
         self._r_thread = Thread(
             target=self._console_reader
         )
@@ -64,7 +65,12 @@ class Console:
         last_line = ''
         while True:
             # read data from the socket
-            data = self._sock.recv(_BUFFER_SIZE)
+            try:
+                data = self._sock.recv(_BUFFER_SIZE)
+            except socket.timeout as e:
+                continue
+            except OSError as e:
+                break
             if data == b'' or self._stop_signal:
                 break
             # separate into lines
@@ -117,6 +123,6 @@ class Console:
             raise Destroyed('this console has already been destroyed')
         self._logged_in = False
         self._stop_signal = True
+        self._sock.close()
         self._w_thread.join()
         self._r_thread.join()
-        self._sock.close()
